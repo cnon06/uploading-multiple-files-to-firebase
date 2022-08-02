@@ -1,9 +1,10 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/material.dart';
-import 'package:open_file/open_file.dart';
+
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
@@ -14,7 +15,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String fileString = "";
-  String fileExtension = "";
+  String fileName = "";
 
   void singleFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
@@ -24,8 +25,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
       setState(() {
         fileString = result.files.single.path!.toString();
-        fileExtension = result.files.single.extension!.toString();
-        OpenFile.open(fileString);
+        //fileExtension = result.files.single.extension!.toString();
+        fileName = result.files.single.name.toString();
+        print(fileName);
+        // OpenFile.open(fileString);
+        final ref = FirebaseStorage.instance.ref().child(fileName);
+        ref.putFile(file);
       });
     } else {
       fileString = "User canceled the picker.";
@@ -43,7 +48,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            
             TextButton(
                 onPressed: () {
                   singleFile();
