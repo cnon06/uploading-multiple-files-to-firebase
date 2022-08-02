@@ -5,7 +5,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/material.dart';
 
-
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
 
@@ -16,6 +15,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String fileString = "";
   String fileName = "";
+  double? _progress;
+  UploadTask? uploadTask;
 
   void singleFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
@@ -30,7 +31,22 @@ class _MyHomePageState extends State<MyHomePage> {
         print(fileName);
         // OpenFile.open(fileString);
         final ref = FirebaseStorage.instance.ref().child(fileName);
-        ref.putFile(file);
+        uploadTask = ref.putFile(file);
+
+        uploadTask!.snapshotEvents.listen((event) {
+          setState(() {
+            _progress =
+                event.bytesTransferred.toDouble() / event.totalBytes.toDouble();
+            print(_progress.toString());
+          });
+          if (event.state == TaskState.success) {
+            _progress = null;
+            print(_progress);
+            //Fluttertoast.showToast(msg: 'File added to the library');
+          }
+        }).onError((error) {
+          // do something to handle error
+        });
       });
     } else {
       fileString = "User canceled the picker.";
@@ -48,6 +64,12 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+          _progress !=null ? CircularProgressIndicator(
+              value: _progress,  //controller.value,
+              semanticsLabel: 'Linear progress indicator',
+            ): const SizedBox(height: 10),
+           
+            Text("Progress: $_progress"),
             TextButton(
                 onPressed: () {
                   singleFile();
